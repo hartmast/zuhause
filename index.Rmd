@@ -267,6 +267,7 @@ zh[grep("[Bb]leib.*", first_right(zh, "ContextAfter", n = 5)),]$cxn = "zh bleibe
 
 ```
 
+## Annotated sample
 
 Get a sample for manual annotation
 
@@ -288,7 +289,6 @@ Export for further annotation
 
 ```
 
-
 Read file with annotated sample
 
 ```{r}
@@ -303,6 +303,16 @@ Filter: only sample; remove false hits
 
 zh_anno <- filter(zh_anno, spl == "in_sample")
 zh_anno <- filter(zh_anno, keep != "n")
+
+```
+
+## Frequency plot
+
+Simple table
+
+```{r}
+
+qbarplot(zh_anno, cxn, Hit) + guides(fill = guide_legend(title = "Variant")) + theme(axis.text.x = element_text(angle=45, hjust=.9, size=12)) + xlab("Construction")
 
 ```
 
@@ -324,10 +334,3 @@ plot(ct)
 
 ```
 
-Simple table
-
-```{r}
-
-
-
-```
