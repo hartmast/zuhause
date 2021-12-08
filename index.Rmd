@@ -36,6 +36,7 @@ library(party)
 library(lattice)
 library(mlogit)
 library(wizard)
+
 ```
 
 # About this document
@@ -96,6 +97,35 @@ For "zu Hause", we move "Hause" in the keyword column
 
 zh[which(zh$Hit=="zu"),]$Hit <- "zu Hause"
 zh[which(zh$Hit=="zu Hause"),]$ContextAfter <- gsub("^Hause ", "", zh[which(zh$Hit=="zu Hause"),]$ContextAfter)
+
+```
+
+For a deeper analysis of the different text types involved, we add metadata from the Corona corpus URL collection (available at https://github.com/adbar/coronakorpus)
+
+```{r}
+
+# Coronacorpus URLs
+urls <- read_csv("coronakorpus_urls_all.csv")
+
+# remove duplicates
+urls <- urls[-which(duplicated(urls)),]
+
+# detect URLs that are assigned to more than 1 category
+urls_dup <- urls[which(duplicated(urls$url)),]$url
+urls$duplicated <- character(nrow(urls))
+urls[which(urls$url %in% urls_dup),]$duplicated <- "y"
+urls[which(!urls$url %in% urls_dup),]$duplicated <- "n"
+
+for(i in 1:length(urls_dup)) {
+  urls[which(urls$url==urls_dup[i]),]$category <- paste0(urls[which(urls$url==urls_dup[i]),]$category, collapse = "/")
+}
+
+# remove duplicates
+urls <- urls[-which(duplicated(urls$url)),]
+
+
+# join dataframes
+zh <- left_join(zh, urls, by = c("URL" = "url"))
 
 ```
 
@@ -297,6 +327,14 @@ zh_anno <- read_xlsx("zh_spl_anno.xlsx")
 
 ```
 
+Add category information (again)
+
+```{r}
+
+zh_anno <- left_join(zh_anno, urls, by = c("URL" = "url"))
+
+```
+
 Filter: only sample; remove false hits
 
 ```{r}
@@ -316,20 +354,52 @@ qbarplot(zh_anno, cxn, Hit) + guides(fill = guide_legend(title = "Variant")) + t
 
 ```
 
-Conditional inference tree
+Export list of text type categories for simplifying them manually
 
 ```{r}
+
+#export
+
+# write_excel_csv(tibble(category = unique(zh$category),
+#                        texttype = character(length(unique(zh$category)))),
+#                 "texttypes.csv")
+
+# re-import
+texttype <- read_csv("texttypes.csv")
+
+# bind with zh_anno
+zh_anno <- left_join(zh_anno, texttype)
+
+
+```
+
+Conditional inference tree
+
+```{r fig.height=15, fig.width=20}
 
 # convert response variable to factor
 zh_anno$Hit <- factor(zh_anno$Hit)
 zh_anno$cxn <- factor(zh_anno$cxn)
+zh_anno$category <- factor(zh_anno$category)
+zh_anno$texttype <- factor(zh_anno$texttype)
 
 # get ctree
-ct <- ctree(Hit ~ cxn, data = zh_anno)
-cf <- cforest(Hit ~ cxn, data = zh_anno, controls = cforest_unbiased(mtry = 1))
+ct <- partykit::ctree(Hit ~ cxn + texttype, data = zh_anno)
+cf <- cforest(Hit ~ cxn + texttype, data = zh_anno, controls = cforest_unbiased(mtry = 1))
+
+# get variable importance
+varimp <- varimp(cf, conditional = T)
 
 # plot conditional inference tree
-plot(ct)
+plot(ct, gp = gpar(fontsize = 12), 
+       ep_args = list(justmin = 6),
+  ip_args=list(
+       abbreviate = TRUE))
+
+
+# random forest results: conditional variable importance
+dotplot(varimp)
+
 
 
 ```
