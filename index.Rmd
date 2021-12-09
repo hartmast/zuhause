@@ -36,6 +36,7 @@ library(party)
 library(lattice)
 library(mlogit)
 library(wizard)
+library(lme4)
 
 ```
 
@@ -391,3 +392,16 @@ Visualization of conditional variable importance
 
 # random forest results: conditional variable importance
 dotplot(varimp)
+
+```
+
+Compare *zu Hause V* with *zu Hause arbeiten*
+
+```{r}
+
+filter(zh_anno, cxn %in% c("zh_V", "zh_sein_bleiben")) %>% qbarplot(cxn_fine, Hit) + theme(axis.text.x = element_text(angle=45, hjust=.9, size=12)) + xlab("Construction")
+
+zh_anno %>% mutate(cxn_fine2 = recode(cxn_fine, "zh in Quarantäne" = "zh V", "zh EINSPERR" = "zh V")) %>% filter(cxn %in% c("zh_V", "zh_sein_bleiben")) %>% qbarplot(cxn_fine2, Hit) + theme(axis.text.x = element_text(angle=45, hjust=.9, size=12)) + xlab("Construction")
+
+```
+
