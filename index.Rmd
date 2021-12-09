@@ -391,7 +391,7 @@ Visualization of conditional variable importance
 ```{r}
 
 # random forest results: conditional variable importance
-dotplot(varimp)
+dotplot(varimp, cex=2, scales = list(cex=2))
 
 ```
 
