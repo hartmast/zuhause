@@ -130,6 +130,27 @@ zh <- left_join(zh, urls, by = c("URL" = "url"))
 ```
 
 
+Export list of text type categories for simplifying them manually, re-import it, add the coarse-grained categories to the df
+
+```{r}
+
+#export
+
+# write_excel_csv(tibble(category = unique(zh$category),
+#                        texttype = character(length(unique(zh$category)))),
+#                 "texttypes.csv")
+
+# re-import
+texttype <- read_csv("texttypes.csv")
+
+# join
+zh <- left_join(zh, texttype)
+
+
+
+```
+
+
 Frequency of each spelling variant
 
 ```{r}
@@ -159,6 +180,15 @@ zh_tbl %>% ggplot(aes (x = YM, y = rel, group = variant, col = variant)) +
   guides(col = guide_legend(title = "Variant"))
 
 ```
+
+Frequency by text type
+
+```{r}
+
+qbarplot(zh, texttype, Hit) + theme(axis.text.x = element_text(angle=45, hjust=.9, size=12)) + xlab("Text type")
+
+```
+
 
 Frequency in tabular form
 
@@ -215,36 +245,6 @@ zh_last_left_first_right_types_tagged <- rename(zh_last_left_first_right_types_t
 
 # add to existing dataframe: right
 zh <- left_join(zh, zh_last_left_first_right_types_tagged, by = c("first_right" = "token"), all.x = T)
-
-
-
-# export left andright context for tagging
-
-# pbsapply(1:nrow(zh), function(i) write.table(zh$ContextBefore[i], file = paste0("tmp/", i, ".txt"), quote = F, row.names = F, col.names = F))
-# 
-
-
-# pbsapply(1:10, function(i) paste0(as.character(treetag(zh$ContextBefore[i],
-#               treetagger = "manual",
-#               TT.options = list(path = "/Users/stefanhartmann/Downloads/TreeTagger/",
-#                                 preset = "de"), lang = "de", format = "obj")@tokens$wclass), collapse = " "))
-
-
-# paste0(as.character(treetag(zh$ContextBefore[1],
-#               treetagger = "manual", 
-#               TT.options = list(path = "/Users/stefanhartmann/Downloads/TreeTagger/",
-#                                 preset = "de"), lang = "de", format = "obj")@tokens$wclass), collapse = " ")
-
-# pbsapply(1:nrow(zh), function(i) treetag(zh$last_left[i],
-#               treetagger = "manual", 
-#               TT.options = list(path = "/Users/stefanhartmann/Downloads/TreeTagger/",
-#                                 preset = "de"), lang = "de", format = "obj")@tokens$wclass)
-
-
-# zh_left_tags <- treetag(zh$last_left,
-#               treetagger = "manual", 
-#               TT.options = list(path = "/Users/stefanhartmann/Downloads/TreeTagger/",
-#                                 preset = "de"), lang = "de", format = "obj")
 
 
 
@@ -331,7 +331,11 @@ Add category information (again)
 
 ```{r}
 
+# fine-grained text type categories
 zh_anno <- left_join(zh_anno, urls, by = c("URL" = "url"))
+
+# coarse-grained text type categories
+zh_anno <- left_join(zh_anno, texttype)
 
 ```
 
@@ -346,7 +350,7 @@ zh_anno <- filter(zh_anno, keep != "n")
 
 ## Frequency plot
 
-Simple table
+Simple barplot
 
 ```{r}
 
@@ -354,24 +358,6 @@ qbarplot(zh_anno, cxn, Hit) + guides(fill = guide_legend(title = "Variant")) + t
 
 ```
 
-Export list of text type categories for simplifying them manually
-
-```{r}
-
-#export
-
-# write_excel_csv(tibble(category = unique(zh$category),
-#                        texttype = character(length(unique(zh$category)))),
-#                 "texttypes.csv")
-
-# re-import
-texttype <- read_csv("texttypes.csv")
-
-# bind with zh_anno
-zh_anno <- left_join(zh_anno, texttype)
-
-
-```
 
 Conditional inference tree
 
@@ -394,13 +380,14 @@ varimp <- varimp(cf, conditional = T)
 plot(ct, gp = gpar(fontsize = 12), 
        ep_args = list(justmin = 6),
   ip_args=list(
-       abbreviate = TRUE))
-
-
-# random forest results: conditional variable importance
-dotplot(varimp)
-
+       abbreviate = FALSE))
 
 
 ```
 
+Visualization of conditional variable importance
+
+```{r}
+
+# random forest results: conditional variable importance
+dotplot(varimp)
