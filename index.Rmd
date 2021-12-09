@@ -42,7 +42,7 @@ library(lme4)
 
 # About this document
 
-This document contains supplementary material to a study on graphemic variation in preposition-noun combinations, focusing on the example of *zu Hause / zuhause / Zuhause*.
+This document contains supplementary material to a study on graphemic variation in preposition-noun combinations, focusing on the example of *zu Hause / zuhause / Zuhause*. The data files are available in the corresponding [Github repository](https://github.com/hartmast/zuhause/).
 
 
 ## Data collection
@@ -398,8 +398,6 @@ dotplot(varimp, cex=2, scales = list(cex=2))
 Compare *zu Hause V* with *zu Hause arbeiten*
 
 ```{r}
-
-filter(zh_anno, cxn %in% c("zh_V", "zh_sein_bleiben")) %>% qbarplot(cxn_fine, Hit) + theme(axis.text.x = element_text(angle=45, hjust=.9, size=12)) + xlab("Construction")
 
 zh_anno %>% mutate(cxn_fine2 = recode(cxn_fine, "zh in Quarantäne" = "zh V", "zh EINSPERR" = "zh V")) %>% filter(cxn %in% c("zh_V", "zh_sein_bleiben")) %>% qbarplot(cxn_fine2, Hit) + theme(axis.text.x = element_text(angle=45, hjust=.9, size=12)) + xlab("Construction")
 
